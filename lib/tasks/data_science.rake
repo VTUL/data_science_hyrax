@@ -14,7 +14,7 @@ namespace :data_science do
     ldap = Net::LDAP.new(host: 'directory.vt.edu')
     ldap.bind
     treebase = 'ou=People,dc=vt,dc=edu'
-    ldap_attributes = {mail: :authid, display_name: :displayname, department: :department}
+    ldap_attributes = {email: :mail, display_name: :displayname, department: :department}
     #Address is available as :postaladdress as well.
 
     IO.foreach('user_list.txt') do |email|
