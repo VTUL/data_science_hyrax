@@ -31,7 +31,7 @@ namespace :data_science do
             user[user_attr] = result[ldap_attr][0].force_encoding('UTF-8')
           end
         end
-
+        user.password = "123456"
         new_user = user.id.nil?
         user.save!
         if new_user
