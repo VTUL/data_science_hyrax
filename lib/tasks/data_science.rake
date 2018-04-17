@@ -14,21 +14,17 @@ namespace :data_science do
     ldap = Net::LDAP.new(host: 'directory.vt.edu')
     ldap.bind
     treebase = 'ou=People,dc=vt,dc=edu'
-    ldap_attributes = {display_name: :displayname, department: :department}
+    ldap_attributes = {uid: :authid, display_name: :displayname, department: :department}
     #Address is available as :postaladdress as well.
 
-    IO.foreach('user_list.txt') do |line|
-      line = line.split
-      uid = line[0]
-      pid = line[1]
-      filter = Net::LDAP::Filter.eq('uid', uid)
+    IO.foreach('user_list.txt') do |email|
+      email = email.strip
+      filter = Net::LDAP::Filter.eq('mail', email)
       results = ldap.search(base: treebase, filter: filter)
       if results.count == 1
-        result = results[0]
+        user = User.find_or_initialize_by({email: email})
 
-        user = User.find_or_initialize_by({uid: pid})
-        user.provider = 'cas'
-        user.email = (result.respond_to?(:mail) ? result[:mail][0] : "#{pid}@vt.edu")
+        result = results[0]
         ldap_attributes.each do |user_attr, ldap_attr|
           user_attr = user_attr.to_sym
           if result.respond_to?(ldap_attr)
@@ -39,14 +35,14 @@ namespace :data_science do
         new_user = user.id.nil?
         user.save!
         if new_user
-          puts "Created '#{pid}'."
+          puts "Created '#{email}'."
         else
-          puts "Updated '#{pid}'."
+          puts "Updated '#{email}'."
         end
       elsif results.count > 1
-        puts "Searching for '#{pid}' did not return a unique result."
+        puts "Searching for '#{email}' did not return a unique result."
       else
-        puts "Searching for '#{pid}' did not return any results."
+        puts "Searching for '#{email}' did not return any results."
       end
     end
   end
@@ -62,9 +58,9 @@ namespace :data_science do
         user.roles << admin_role
         user.roles = user.roles.uniq
         user.save!
-        puts "#{pid} upgraded."
+        puts "#{email} upgraded."
       else
-        puts "#{pid} user does not exist in system."
+        puts "#{email} user does not exist in system."
       end
     end
   end
