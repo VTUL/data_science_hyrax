@@ -55,9 +55,8 @@ namespace :data_science do
   task upgrade_users: :environment do
     admin_role = Role.find_by({name: 'admin'})
 
-    IO.foreach('admin_list.txt') do |pid|
-      pid = pid.strip
-      user = User.find_by({uid: pid})
+    IO.foreach('admin_list.txt') do |email|
+      user = User.find_by({email: email})
 
       if !user.nil?
         user.roles << admin_role
